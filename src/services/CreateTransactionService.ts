@@ -1,3 +1,4 @@
+import { response, Response } from 'express';
 import TransactionsRepository from '../repositories/TransactionsRepository';
 import Transaction from '../models/Transaction';
 
@@ -15,6 +16,15 @@ class CreateTransactionService {
   }
 
   public execute({ title, value, type }: Request): Transaction {
+    if (!['income', 'outcome'].includes(type)) {
+      throw new Error('Invalid transaction type');
+    }
+    const { total } = this.transactionsRepository.getBalance();
+
+    if (type === 'outcome' && value > total) {
+      throw new Error('Outcome cannot be greater than total');
+    }
+
     const transaction = this.transactionsRepository.create({
       title,
       value,
